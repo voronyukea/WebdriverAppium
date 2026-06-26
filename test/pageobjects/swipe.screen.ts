@@ -7,7 +7,7 @@ class SwipeScreen extends Screen {
     public get firstCard() { return $('android=new UiSelector().text("FULLY OPEN SOURCE")'); }
     public get secondCard() { return $('android=new UiSelector().text("GREAT COMMUNITY")'); }   
     public get hiddenLogo() { return $('~WebdriverIO logo'); }
-    public get hiddenText() { return $('//android.widget.TextView[@text="You found me!!!"]'); }
+    public get hiddenText() { return $('android=new UiSelector().text("You found me!!!")'); }
 
     async waitForScreen() {
         await this.waitForPageToLoad(this.swipeHeader);
@@ -42,21 +42,20 @@ class SwipeScreen extends Screen {
     }
 
     async scrollDownToHiddenElement() {
-        await driver.execute('mobile: scroll', {
-            strategy: 'accessibility id',
-            selector: 'you-found-me',
-            toVisible: true 
-        });
-       
         const windowSize = await driver.getWindowSize();
         const x = Math.round(windowSize.width * 0.5);
-        const startY = Math.round(windowSize.height * 0.7);
-        const endY = Math.round(windowSize.height * 0.5);
-        
-        
-        if (!(await this.hiddenText.isDisplayed())) {
+        const startY = Math.round(windowSize.height * 0.8);
+        const endY = Math.round(windowSize.height * 0.3);
+
+        for (let attempt = 0; attempt < 6; attempt++) {
+            if (await this.hiddenText.isExisting()) {
+                return;
+            }
+
             await this.swipe(x, startY, x, endY);
         }
+
+        throw new Error('Hidden swipe element "You found me!!!" was not found after scrolling.');
     }
 }
 

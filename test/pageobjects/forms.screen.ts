@@ -8,6 +8,7 @@ class FormsScreen extends Screen {
     private get switchToggle() { return $('~switch'); }
     private get switchText() { return $('~switch-text'); }
     private get dropdown() { return $('~Dropdown'); }
+    private get dropdownPicker() { return $('~Dropdown picker'); }
 
    
     private async getDropdownOption(optionText: string) {
@@ -35,7 +36,18 @@ class FormsScreen extends Screen {
     }
 
     async selectDropdownOption(optionText: string) {
-        await this.dropdown.click();       
+        if (!(await this.dropdown.isDisplayed()) && !(await this.dropdownPicker.isDisplayed())) {
+            // On smaller screens dropdown can be below the fold, so scroll it into view.
+            await $('android=new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(new UiSelector().description("Dropdown"))');
+        }
+
+        if (await this.dropdown.isDisplayed()) {
+            await this.dropdown.click();
+        } else {
+            await this.dropdownPicker.waitForDisplayed({ timeout: 5000 });
+            await this.dropdownPicker.click();
+        }
+
         const option = await this.getDropdownOption(optionText);
         await option.waitForDisplayed({ timeout: 3000 });
         await option.click();
