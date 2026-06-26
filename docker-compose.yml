@@ -1,7 +1,7 @@
 services:
   # Сервер Appium со встроенным эмулятором Android
   android-emulator:
-    image: budtmo/docker-android:11.0 # Использован чистый, официальный тег версии
+    image: budtmo/docker-android:emulator_11.0 # Валидный тег образа для Android 11
     privileged: true
     ports:
       - "4723:4723"  # Порт Appium сервера
