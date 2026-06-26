@@ -28,7 +28,7 @@ export const config: WebdriverIO.Config = {
         // Для CI передаем URL, чтобы удаленный Appium внутри контейнера сам скачал APK.
         // Локально используем файл из репозитория.
         'appium:app': process.env.CI
-            ? 'https://github.com/webdriverio/native-demo-app/releases/download/v1.0.8/Android-NativeDemoApp-v1.0.8.apk'
+            ? 'https://github.com/webdriverio/native-demo-app/releases/download/v1.0.8/android.wdio.native.app.v1.0.8.apk'
             : './apps/NativeDemoApp.apk', 
         
         'appium:allowTestPackages': true,
