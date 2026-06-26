@@ -22,11 +22,11 @@ export const config: WebdriverIO.Config = {
     
     capabilities: [{
        
-         platformName: 'Android',
+        platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
         
-        // Если тесты бегут в GitHub Actions (CI), берем путь внутри контейнера, иначе — локальный
-        'appium:app': process.env.CI ? '/opt/apps/NativeDemoApp.apk' : './apps/NativeDemoApp.apk', 
+        // Если бежим в CI, берем путь внутри Docker-контейнера budtmo, иначе — локальный
+        'appium:app': process.env.CI ? '/root/tmp/NativeDemoApp.apk' : './apps/NativeDemoApp.apk', 
         
         'appium:allowTestPackages': true,
         'appium:newCommandTimeout': 240,
