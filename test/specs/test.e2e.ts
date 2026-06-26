@@ -1,9 +1,26 @@
-import { expect } from '@wdio/globals'
+import { driver, expect } from '@wdio/globals'
 import LoginScreen from '../pageobjects/login.screen.ts'
 import FormsScreen from '../pageobjects/forms.screen.ts'
 import SwipeScreen from '../pageobjects/swipe.screen.ts'
+import Screen from '../pageobjects/screen.ts'
+
+const baseScreen = new Screen();
 
 describe('Набор мобильных тестов (Все 5 сценариев POM)', () => {
+
+    beforeEach(async () => {
+        if (await driver.isAlertOpen()) {
+            await driver.dismissAlert();
+        }
+
+        await baseScreen.navigateToTab('Home');
+    });
+
+    afterEach(async () => {
+        if (await driver.isAlertOpen()) {
+            await driver.dismissAlert();
+        }
+    });
 
     it('Сценарий 1: Успешная авторизация с валидными данными', async () => {
         await LoginScreen.navigateToTab('Login');

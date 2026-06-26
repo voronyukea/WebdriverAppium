@@ -8,7 +8,16 @@ export default class Screen {
     }
 
     async navigateToTab(tabName: 'Home' | 'Webview' | 'Login' | 'Forms' | 'Swipe' | 'Drag') {
-        const tabButton = await $(`~${tabName}`);
-        await tabButton.click();
+        const accessibilityTabButton = await $(`~${tabName}`);
+
+        if (await accessibilityTabButton.isDisplayed()) {
+            await accessibilityTabButton.click();
+            return;
+        }
+
+        // Fallback to visible text selector for cases where accessibility id is missing.
+        const textTabButton = await $(`android=new UiSelector().text("${tabName}")`);
+        await textTabButton.waitForDisplayed({ timeout: 10000 });
+        await textTabButton.click();
     }
 }
