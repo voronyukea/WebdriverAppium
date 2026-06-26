@@ -52,11 +52,14 @@ jobs:
       - name: Execute WebdriverIO Tests
         run: npm run wdio
 
-      # 8. Сбор логов и остановка контейнеров
-      - name: Cleanup and Upload Reports
+      # 8. Остановка контейнеров (выполнится в любом случае)
+      - name: Stop Docker Compose
         if: always()
-        run: |
-          docker-compose down
+        run: docker-compose down
+
+      # 9. Сохранение логов и отчетов (выполнится в любом случае)
+      - name: Upload Test Reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: webdriverio-logs
