@@ -40,18 +40,21 @@ export const config: WebdriverIO.Config = {
     connectionRetryCount: 3,   
     
     
-    services: [
-        [
-            'appium',
-            {
-                args: {
-                    address: '127.0.0.1',
-                    port: 4723
-                },
-                command: 'appium'
-            }
-        ]
-    ],   
+    // В CI Appium уже запущен в docker-контейнере, поэтому не стартуем второй локальный процесс.
+    services: process.env.CI
+        ? []
+        : [
+            [
+                'appium',
+                {
+                    args: {
+                        address: '127.0.0.1',
+                        port: 4723
+                    },
+                    command: 'appium'
+                }
+            ]
+        ],   
     
     framework: 'mocha',
     reporters: ['spec'],

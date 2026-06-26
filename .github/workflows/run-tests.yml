@@ -48,16 +48,28 @@ jobs:
           done
           echo "Appium Server is up and running!"
 
-      # 7. Запуск ваших тестов WebdriverIO
+      # 7. Ждем, пока Android-эмулятор полностью загрузится
+      - name: Wait for Android Emulator Boot
+        run: |
+          echo "Waiting for adb device..."
+          docker compose exec -T android-emulator adb wait-for-device
+          echo "Waiting for sys.boot_completed=1..."
+          until [ "$(docker compose exec -T android-emulator adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; do
+            sleep 5
+            echo "Emulator is still booting..."
+          done
+          echo "Android emulator is fully booted!"
+
+      # 8. Запуск ваших тестов WebdriverIO
       - name: Execute WebdriverIO Tests
         run: npm run wdio
 
-      # 8. Остановка контейнеров (УБРАЛИ ДЕФИС)
+      # 9. Остановка контейнеров (УБРАЛИ ДЕФИС)
       - name: Stop Docker Compose
         if: always()
         run: docker compose down
 
-      # 9. Сохранение логов и отчетов
+      # 10. Сохранение логов и отчетов
       - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v4
