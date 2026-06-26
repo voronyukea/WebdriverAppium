@@ -27,18 +27,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4. Скачиваем тестовый APK в папку apps
-      - name: Download Target APK
-        run: |
-          mkdir -p apps
-          curl -L -o apps/NativeDemoApp.apk https://github.com/webdriverio/native-demo-app/releases/download/v1.0.8/Android-NativeDemoApp-v1.0.8.apk
-
-      # 5. Запускаем инфраструктуру (УБРАЛИ ДЕФИС)
+      # 4. Запускаем инфраструктуру (УБРАЛИ ДЕФИС)
       - name: Start Docker Compose (Appium + Emulator)
         run: |
           docker compose up -d
 
-      # 6. Проверяем доступность Appium сервера перед тестами
+      # 5. Проверяем доступность Appium сервера перед тестами
       - name: Wait for Appium Server
         run: |
           echo "Waiting for Appium to respond..."
@@ -48,7 +42,7 @@ jobs:
           done
           echo "Appium Server is up and running!"
 
-      # 7. Ждем, пока Android-эмулятор полностью загрузится
+      # 6. Ждем, пока Android-эмулятор полностью загрузится
       - name: Wait for Android Emulator Boot
         run: |
           echo "Waiting for adb device..."
@@ -60,16 +54,16 @@ jobs:
           done
           echo "Android emulator is fully booted!"
 
-      # 8. Запуск ваших тестов WebdriverIO
+      # 7. Запуск ваших тестов WebdriverIO
       - name: Execute WebdriverIO Tests
         run: npm run wdio
 
-      # 9. Остановка контейнеров (УБРАЛИ ДЕФИС)
+      # 8. Остановка контейнеров (УБРАЛИ ДЕФИС)
       - name: Stop Docker Compose
         if: always()
         run: docker compose down
 
-      # 10. Сохранение логов и отчетов
+      # 9. Сохранение логов и отчетов
       - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v4

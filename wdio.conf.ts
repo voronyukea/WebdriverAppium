@@ -25,8 +25,11 @@ export const config: WebdriverIO.Config = {
         platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
         
-        // Если бежим в CI, берем путь внутри Docker-контейнера budtmo, иначе — локальный
-        'appium:app': process.env.CI ? '/root/tmp/NativeDemoApp.apk' : './apps/NativeDemoApp.apk', 
+        // Для CI передаем URL, чтобы удаленный Appium внутри контейнера сам скачал APK.
+        // Локально используем файл из репозитория.
+        'appium:app': process.env.CI
+            ? 'https://github.com/webdriverio/native-demo-app/releases/download/v1.0.8/Android-NativeDemoApp-v1.0.8.apk'
+            : './apps/NativeDemoApp.apk', 
         
         'appium:allowTestPackages': true,
         'appium:newCommandTimeout': 240,
