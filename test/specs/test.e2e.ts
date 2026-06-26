@@ -1,4 +1,4 @@
-import { driver, expect } from '@wdio/globals'
+import { expect } from '@wdio/globals'
 import LoginScreen from '../pageobjects/login.screen.ts'
 import FormsScreen from '../pageobjects/forms.screen.ts'
 import SwipeScreen from '../pageobjects/swipe.screen.ts'
@@ -6,20 +6,29 @@ import Screen from '../pageobjects/screen.ts'
 
 const baseScreen = new Screen();
 
+async function dismissNativeDialogIfPresent() {
+    const okButton = await $('id=android:id/button1');
+    if (await okButton.isExisting()) {
+        await okButton.click();
+        return;
+    }
+
+    const cancelButton = await $('id=android:id/button2');
+    if (await cancelButton.isExisting()) {
+        await cancelButton.click();
+    }
+}
+
 describe('Набор мобильных тестов (Все 5 сценариев POM)', () => {
 
     beforeEach(async () => {
-        if (await driver.isAlertOpen()) {
-            await driver.dismissAlert();
-        }
+        await dismissNativeDialogIfPresent();
 
         await baseScreen.navigateToTab('Home');
     });
 
     afterEach(async () => {
-        if (await driver.isAlertOpen()) {
-            await driver.dismissAlert();
-        }
+        await dismissNativeDialogIfPresent();
     });
 
     it('Сценарий 1: Успешная авторизация с валидными данными', async () => {
