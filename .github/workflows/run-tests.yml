@@ -11,7 +11,7 @@ on:
 jobs:
   android-tests:
     
-    runs-on: macos-14
+    runs-on: macos-13
 
     steps:
      
@@ -45,19 +45,15 @@ jobs:
      
       - name: Run Android Emulator and Execute Tests
         uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30                    # Версию Android оставляем (Android 11)
-          target: google_apis_playstore    # Для ARM64 на macOS лучше использовать этот таргет
-          arch: arm64-v8a                  # СТРОГО МЕНЯЕМ НА РОДНУЮ АРХИТЕКТУРУ APPLE SILICON
+        with:          
+          api-level: 30
+          target: google_apis
+          arch: x86_64                     # Возвращаем стандартную архитектуру Intel
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-spellchecker: true
-          
           script: |
-            # Ждем полной готовности устройства, adb devices отработает корректно
             adb devices
-            
-            # Запуск тестов
             npm run wdio
 
      
