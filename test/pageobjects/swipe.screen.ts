@@ -42,20 +42,30 @@ class SwipeScreen extends Screen {
     }
 
     async scrollDownToHiddenElement() {
+        // Primary strategy: ScrollView + accessibility id is the most stable on Android emulators.
+        try {
+            await $('android=new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(new UiSelector().description("WebdriverIO logo"))');
+            if (await this.hiddenLogo.isExisting()) {
+                return;
+            }
+        } catch {
+            // Fallback to gesture-based scrolling below.
+        }
+
         const windowSize = await driver.getWindowSize();
         const x = Math.round(windowSize.width * 0.5);
         const startY = Math.round(windowSize.height * 0.8);
         const endY = Math.round(windowSize.height * 0.3);
 
         for (let attempt = 0; attempt < 6; attempt++) {
-            if (await this.hiddenText.isExisting()) {
+            if ((await this.hiddenLogo.isExisting()) || (await this.hiddenText.isExisting())) {
                 return;
             }
 
             await this.swipe(x, startY, x, endY);
         }
 
-        throw new Error('Hidden swipe element "You found me!!!" was not found after scrolling.');
+        throw new Error('Hidden swipe elements were not found after scrolling (expected WebdriverIO logo / You found me!!!).');
     }
 }
 
