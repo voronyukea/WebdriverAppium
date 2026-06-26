@@ -1,15 +1,15 @@
 version: '3.8'
 
 services:
-  # Сервер Appium с Android-эмулятором внутри
+  # Сервер Appium со встроенным эмулятором Android
   android-emulator:
-    image: budtmo/docker-android:emulator-11.0 # Проверенный, стабильный образ с Android 11
+    image: budtmo/docker-android:emulator-x86-11.0 # ИСПРАВЛЕННЫЙ ТЕГ
     privileged: true
     ports:
-      - "4723:4723"  # Порт Appium
-      - "6080:6080"  # (Опционально) Порт для просмотра экрана эмулятора в браузере VNC
+      - "4723:4723"  # Порт Appium сервера
+      - "6080:6080"  # Порт для веб-интерфейса VNC (посмотреть на экран эмулятора)
     volumes:
-      - ./apps:/root/tmp # Пробрасываем нашу папку с APK внутрь контейнера
+      - ./apps:/root/tmp # Монтируем папку с вашим APK
     environment:
       - EMULATOR_DEVICE=Nexus 5
       - WEB_VNC=true
