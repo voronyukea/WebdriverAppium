@@ -71,15 +71,25 @@ jobs:
       # 7. Проверяем формат app_url перед запуском тестов
       - name: Validate BrowserStack app url
         run: |
-          if [ -z "$BSTACK_APP_URL" ] || [ "$BSTACK_APP_URL" = "null" ] || [ "$BSTACK_APP_URL" = "undefined" ]; then
-            echo "BROWSERSTACK_APP_URL is empty or invalid: '$BSTACK_APP_URL'"
+          CLEAN_APP_URL=$(printf '%s' "$BSTACK_APP_URL" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+          if [ -z "$CLEAN_APP_URL" ] || [ "$CLEAN_APP_URL" = "null" ] || [ "$CLEAN_APP_URL" = "undefined" ]; then
+            echo "BROWSERSTACK_APP_URL is empty or invalid: '$CLEAN_APP_URL'"
             exit 1
           fi
-          if ! echo "$BSTACK_APP_URL" | grep -Eq '^(bs://|[A-Za-z0-9._:-]+(/[A-Za-z0-9._:-]+)?)$'; then
-            echo "BROWSERSTACK_APP_URL has unexpected format: '$BSTACK_APP_URL'"
-            echo "Expected bs://... or valid custom_id/shareable_id"
+
+          if [[ "$CLEAN_APP_URL" == bs://* ]]; then
+            echo "BSTACK_APP_URL_CLEAN=$CLEAN_APP_URL" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          if ! echo "$CLEAN_APP_URL" | grep -Eq '^[A-Za-z0-9._:-]+(/[A-Za-z0-9._:-]+)?$'; then
+            echo "BROWSERSTACK_APP_URL has unexpected format: '$CLEAN_APP_URL'"
+            echo "Expected bs://<app-id> or valid custom_id/shareable_id"
             exit 1
           fi
+
+          echo "BSTACK_APP_URL_CLEAN=$CLEAN_APP_URL" >> $GITHUB_ENV
 
       # 8. Запускаем тесты WebdriverIO
       - name: Execute WebdriverIO Tests
@@ -87,4 +97,4 @@ jobs:
         env:
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-          BROWSERSTACK_APP_URL: ${{ env.BSTACK_APP_URL }}
+          BROWSERSTACK_APP_URL: ${{ env.BSTACK_APP_URL_CLEAN }}
