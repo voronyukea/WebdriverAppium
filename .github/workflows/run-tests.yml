@@ -38,15 +38,39 @@ jobs:
           BS_USER: ${{ secrets.BROWSERSTACK_USERNAME }}
           BS_KEY:  ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         run: |
-          JSON_RESPONSE=$(curl -u "$BS_USER:$BS_KEY" \
+          JSON_RESPONSE=$(curl -sS -u "$BS_USER:$BS_KEY" \
             -X POST "https://api-cloud.browserstack.com/app-automate/upload" \
             -F "file=@apps/NativeDemoApp.apk")
-          
-          APP_URL=$(echo $JSON_RESPONSE | jq -r '.app_url')
+
+          APP_URL=$(echo "$JSON_RESPONSE" | jq -r '.app_url // empty')
+          ERROR_MESSAGE=$(echo "$JSON_RESPONSE" | jq -r '.error // .message // empty')
+
+          if [ -z "$APP_URL" ] || [ "$APP_URL" = "null" ]; then
+            echo "BrowserStack upload response does not contain a valid app_url."
+            if [ -n "$ERROR_MESSAGE" ]; then
+              echo "BrowserStack error: $ERROR_MESSAGE"
+            fi
+            echo "Raw response: $JSON_RESPONSE"
+            exit 1
+          fi
+
           echo "BSTACK_APP_URL=$APP_URL" >> $GITHUB_ENV
           echo "App uploaded successfully. URL: $APP_URL"
 
-      # 6. Запускаем тестов WebdriverIO (Секреты синхронизированы!)
+      # 6. Проверяем формат app_url перед запуском тестов
+      - name: Validate BrowserStack app url
+        run: |
+          if [ -z "$BSTACK_APP_URL" ] || [ "$BSTACK_APP_URL" = "null" ] || [ "$BSTACK_APP_URL" = "undefined" ]; then
+            echo "BROWSERSTACK_APP_URL is empty or invalid: '$BSTACK_APP_URL'"
+            exit 1
+          fi
+          if ! echo "$BSTACK_APP_URL" | grep -Eq '^(bs://|[A-Za-z0-9._:-]+(/[A-Za-z0-9._:-]+)?)$'; then
+            echo "BROWSERSTACK_APP_URL has unexpected format: '$BSTACK_APP_URL'"
+            echo "Expected bs://... or valid custom_id/shareable_id"
+            exit 1
+          fi
+
+      # 7. Запускаем тесты WebdriverIO
       - name: Execute WebdriverIO Tests
         run: npm run wdio
         env:

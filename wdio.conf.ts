@@ -1,3 +1,12 @@
+const ciAppUrl = process.env.BROWSERSTACK_APP_URL
+const isInvalidCiAppUrl = !ciAppUrl || ciAppUrl === 'null' || ciAppUrl === 'undefined'
+
+if (process.env.CI && isInvalidCiAppUrl) {
+    throw new Error(
+        'Invalid BROWSERSTACK_APP_URL for CI run. Expected bs://<app-id> or valid BrowserStack custom/shareable app id.'
+    )
+}
+
 export const config: WebdriverIO.Config = {
     runner: 'local',
     tsConfigPath: './tsconfig.json',
@@ -26,7 +35,7 @@ export const config: WebdriverIO.Config = {
         
       
         'appium:app': process.env.CI 
-            ? process.env.BROWSERSTACK_APP_URL 
+            ? ciAppUrl 
             : './apps/NativeDemoApp.apk', 
         
       
