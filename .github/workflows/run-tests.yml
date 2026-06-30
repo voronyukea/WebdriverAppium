@@ -1,52 +1,55 @@
-name: Mobile UI Tests (WebdriverIO + BrowserStack)
+name: Mobile UI Tests via BrowserStack
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  android-tests:
+  browserstack-tests:
     runs-on: ubuntu-latest
-    env:
-      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-      BROWSERSTACK_APP_URL: ${{ secrets.BROWSERSTACK_APP_URL }}
 
     steps:
       # 1. Клонируем репозиторий
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Устанавливаем Node.js
+      # 2. Настраиваем Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      # 3. Устанавливаем зависимости (WebdriverIO)
+      # 3. Устанавливаем зависимости фреймворка
       - name: Install dependencies
         run: npm ci
 
-      # 4. Проверяем, что секреты BrowserStack переданы
-      - name: Validate BrowserStack secrets
+      # 4. Скачиваем тестовый APK файл
+      - name: Download Target APK
         run: |
-          test -n "$BROWSERSTACK_USERNAME"
-          test -n "$BROWSERSTACK_ACCESS_KEY"
-          test -n "$BROWSERSTACK_APP_URL"
+          mkdir -p apps
+          curl -L -o apps/NativeDemoApp.apk https://github.com/webdriverio/native-demo-app/releases/download/v1.0.8/Android-NativeDemoApp-v1.0.8.apk
 
-      # 5. Запуск тестов WebdriverIO на BrowserStack
+      # 5. Загружаем APK в BrowserStack (Секреты синхронизированы!)
+      - name: Upload App to BrowserStack
+        id: upload
+        env:
+          BS_USER: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BS_KEY:  ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+        run: |
+          JSON_RESPONSE=$(curl -u "$BS_USER:$BS_KEY" \
+            -X POST "https://api-cloud.browserstack.com/app-automate/upload" \
+            -F "file=@apps/NativeDemoApp.apk")
+          
+          APP_URL=$(echo $JSON_RESPONSE | jq -r '.app_url')
+          echo "BSTACK_APP_URL=$APP_URL" >> $GITHUB_ENV
+          echo "App uploaded successfully. URL: $APP_URL"
+
+      # 6. Запускаем тестов WebdriverIO (Секреты синхронизированы!)
       - name: Execute WebdriverIO Tests
         run: npm run wdio
-
-      # 6. Сохранение логов и отчетов
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: webdriverio-logs
-          path: |
-            .tmp/
+        env:
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+          BROWSERSTACK_APP_URL: ${{ env.BSTACK_APP_URL }}
