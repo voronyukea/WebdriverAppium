@@ -1,5 +1,7 @@
 const ciAppUrl = process.env.BROWSERSTACK_APP_URL
 const isInvalidCiAppUrl = !ciAppUrl || ciAppUrl === 'null' || ciAppUrl === 'undefined'
+const ciDeviceName = process.env.BROWSERSTACK_DEVICE_NAME || 'Google Pixel 7'
+const ciPlatformVersion = process.env.BROWSERSTACK_PLATFORM_VERSION
 
 if (process.env.CI && isInvalidCiAppUrl) {
     throw new Error(
@@ -40,8 +42,8 @@ export const config: WebdriverIO.Config = {
         
       
         ...(process.env.CI ? {
-            'appium:platformVersion': '11.0',         // Версия Android
-            'appium:deviceName': 'Google Pixel 5',     // Реальный девайс из дата-центра
+            'appium:deviceName': ciDeviceName,
+            ...(ciPlatformVersion ? { 'appium:platformVersion': ciPlatformVersion } : {}),
             'bstack:options': {
                 projectName: 'QA-Dashboard Mobile UI',
                 buildName: process.env.GITHUB_RUN_NUMBER ? `Build #${process.env.GITHUB_RUN_NUMBER}` : 'Local Build',
