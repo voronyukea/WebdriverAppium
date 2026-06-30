@@ -29,9 +29,20 @@ jobs:
       - name: Download Target APK
         run: |
           mkdir -p apps
-          curl -L -o apps/NativeDemoApp.apk https://github.com/webdriverio/native-demo-app/releases/download/v1.0.8/Android-NativeDemoApp-v1.0.8.apk
+          curl -fSL -o apps/NativeDemoApp.apk https://github.com/webdriverio/native-demo-app/releases/download/v1.0.8/android.wdio.native.app.v1.0.8.apk
 
-      # 5. Загружаем APK в BrowserStack (Секреты синхронизированы!)
+      # 5. Валидация APK перед загрузкой в BrowserStack
+      - name: Validate downloaded APK
+        run: |
+          test -s apps/NativeDemoApp.apk
+          APK_SIZE=$(wc -c < apps/NativeDemoApp.apk)
+          if [ "$APK_SIZE" -lt 1000000 ]; then
+            echo "Downloaded APK is unexpectedly small: ${APK_SIZE} bytes"
+            exit 1
+          fi
+          unzip -tq apps/NativeDemoApp.apk > /dev/null
+
+      # 6. Загружаем APK в BrowserStack (Секреты синхронизированы!)
       - name: Upload App to BrowserStack
         id: upload
         env:
@@ -57,7 +68,7 @@ jobs:
           echo "BSTACK_APP_URL=$APP_URL" >> $GITHUB_ENV
           echo "App uploaded successfully. URL: $APP_URL"
 
-      # 6. Проверяем формат app_url перед запуском тестов
+      # 7. Проверяем формат app_url перед запуском тестов
       - name: Validate BrowserStack app url
         run: |
           if [ -z "$BSTACK_APP_URL" ] || [ "$BSTACK_APP_URL" = "null" ] || [ "$BSTACK_APP_URL" = "undefined" ]; then
@@ -70,7 +81,7 @@ jobs:
             exit 1
           fi
 
-      # 7. Запускаем тесты WebdriverIO
+      # 8. Запускаем тесты WebdriverIO
       - name: Execute WebdriverIO Tests
         run: npm run wdio
         env:
