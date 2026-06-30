@@ -1,4 +1,4 @@
-name: Mobile UI Tests (WebdriverIO + Appium via Docker Compose)
+name: Mobile UI Tests (WebdriverIO + BrowserStack)
 
 on:
   push:
@@ -10,6 +10,10 @@ on:
 jobs:
   android-tests:
     runs-on: ubuntu-latest
+    env:
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+      BROWSERSTACK_APP_URL: ${{ secrets.BROWSERSTACK_APP_URL }}
 
     steps:
       # 1. Клонируем репозиторий
@@ -27,43 +31,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4. Запускаем инфраструктуру (УБРАЛИ ДЕФИС)
-      - name: Start Docker Compose (Appium + Emulator)
+      # 4. Проверяем, что секреты BrowserStack переданы
+      - name: Validate BrowserStack secrets
         run: |
-          docker compose up -d
+          test -n "$BROWSERSTACK_USERNAME"
+          test -n "$BROWSERSTACK_ACCESS_KEY"
+          test -n "$BROWSERSTACK_APP_URL"
 
-      # 5. Проверяем доступность Appium сервера перед тестами
-      - name: Wait for Appium Server
-        run: |
-          echo "Waiting for Appium to respond..."
-          until curl -s http://127.0.0.1:4723/status; do
-            sleep 5
-            echo "Retrying..."
-          done
-          echo "Appium Server is up and running!"
-
-      # 6. Ждем, пока Android-эмулятор полностью загрузится
-      - name: Wait for Android Emulator Boot
-        run: |
-          echo "Waiting for adb device..."
-          docker compose exec -T android-emulator adb wait-for-device
-          echo "Waiting for sys.boot_completed=1..."
-          until [ "$(docker compose exec -T android-emulator adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; do
-            sleep 5
-            echo "Emulator is still booting..."
-          done
-          echo "Android emulator is fully booted!"
-
-      # 7. Запуск ваших тестов WebdriverIO
+      # 5. Запуск тестов WebdriverIO на BrowserStack
       - name: Execute WebdriverIO Tests
         run: npm run wdio
 
-      # 8. Остановка контейнеров (УБРАЛИ ДЕФИС)
-      - name: Stop Docker Compose
-        if: always()
-        run: docker compose down
-
-      # 9. Сохранение логов и отчетов
+      # 6. Сохранение логов и отчетов
       - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v4
