@@ -1,51 +1,59 @@
-
 export const config: WebdriverIO.Config = {
-   
     runner: 'local',
     tsConfigPath: './tsconfig.json',
     
    
-    hostname: '127.0.0.1',
-    port: 4723,
-    path: '/',
+    ...(process.env.CI ? {} : {
+        hostname: '127.0.0.1',
+        port: 4723,
+        path: '/'
+    }),
     
    
+    user: process.env.BROWSERSTACK_USERNAME,
+    key: process.env.BROWSERSTACK_ACCESS_KEY,
+    
     specs: [
         './test/specs/**/*.ts'
     ],
-    exclude: [
-        // 'path/to/excluded/files'
-    ],
+    exclude: [],
    
-  
-    maxInstances: 1,
+    maxInstances: 1, 
     
     capabilities: [{
-       
         platformName: 'Android',
         'appium:automationName': 'UiAutomator2',
         
-        // Для CI передаем URL, чтобы удаленный Appium внутри контейнера сам скачал APK.
-        // Локально используем файл из репозитория.
-        'appium:app': process.env.CI
-            ? 'https://github.com/webdriverio/native-demo-app/releases/download/v1.0.8/android.wdio.native.app.v1.0.8.apk'
+      
+        'appium:app': process.env.CI 
+            ? process.env.BROWSERSTACK_APP_URL 
             : './apps/NativeDemoApp.apk', 
         
-        'appium:allowTestPackages': true,
-        'appium:newCommandTimeout': 240,
+      
+        ...(process.env.CI ? {
+            'appium:platformVersion': '11.0',         // Версия Android
+            'appium:deviceName': 'Google Pixel 5',     // Реальный девайс из дата-центра
+            'bstack:options': {
+                projectName: 'QA-Dashboard Mobile UI',
+                buildName: process.env.GITHUB_RUN_NUMBER ? `Build #${process.env.GITHUB_RUN_NUMBER}` : 'Local Build',
+                sessionName: 'Android Regression Test'
+            }
+        } : {
+          
+            'appium:allowTestPackages': true,
+            'appium:newCommandTimeout': 240,
+        })
     }],
 
-  
     logLevel: 'info',    
     bail: 0,   
     waitforTimeout: 10000,   
     connectionRetryTimeout: 120000,   
     connectionRetryCount: 3,   
     
-    
-    // В CI Appium уже запущен в docker-контейнере, поэтому не стартуем второй локальный процесс.
+   
     services: process.env.CI
-        ? []
+        ? ['browserstack']
         : [
             [
                 'appium',
